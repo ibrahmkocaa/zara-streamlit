@@ -4,6 +4,7 @@ import os
 import re
 import requests
 from supabase import create_client, Client
+from bs4 import BeautifulSoup
 
 # Supabase URL ve Anahtarı (bunları Supabase projenizden alın)
 SUPABASE_URL = 'https://ggpakaubpgghwsboiglb.supabase.co'
@@ -12,17 +13,19 @@ SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 # Supabase istemcisini oluştur
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Function to save user input to a file
-def save_user_input(product_url, user_email, filename='user_input.json'):
-    data = {'products': []}
-    if os.path.exists(filename):
-        with open(filename, 'r') as file:
-            data = json.load(file)
-            if 'products' not in data:
-                data['products'] = []
-    data['products'].append({'url': product_url, 'email': user_email})
-    with open(filename, 'w') as file:
-        json.dump(data, file, indent=4)
+def zara_product_detail(url):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Safari/605.1.15"
+    }
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.content, "html.parser")
+    
+    if soup.find('span', string='TÜKENDİ'):
+        return False
+    elif soup.find('button', string='Ekle'):
+        return True
+    else:
+        return None
 
 # Function to validate email format
 def is_valid_email(email):
@@ -54,12 +57,16 @@ if submit_button:
         elif not is_valid_url(product_url):
             st.error("Lütfen geçerli bir ürün URL'si girin.")
         else:
-            # Supabase'e veriyi kaydet
-            data = {'url': product_url, 'email': user_email}
-            try:
-                response = supabase.table('maintable').insert(data).execute()
-                st.success('Bilgiler kaydedildi. Ürün stoğa geldiğinde bildirim alacaksınız.')
-            except Exception as e:
-                st.error(f'Bir hata oluştu: {e}')
+            product_available = zara_product_detail(product_url)
+            if product_available:
+                st.success('Ürün zaten mevcut.')
+            else:
+                # Supabase'e veriyi kaydet
+                data = {'url': product_url, 'email': user_email}
+                try:
+                    response = supabase.table('maintable').insert(data).execute()
+                    st.success('Ürün stokta yok, bilgiler kaydedildi. Ürün stoğa geldiğinde bildirim alacaksınız.')
+                except Exception as e:
+                    st.error(f'Bir hata oluştu: {e}')
     else:
         st.error("Lütfen geçerli bir URL ve email girin.")
