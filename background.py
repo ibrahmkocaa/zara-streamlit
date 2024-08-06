@@ -60,7 +60,6 @@ def check_product_availability():
         product_url = product['url']
         user_email = product['email']
         available = zara_product_detail(product_url)
-        available=True
         if available:
             send_email(user_email, product_url)
             print(f"Mail gönderildi: {user_email} için {product_url}")
