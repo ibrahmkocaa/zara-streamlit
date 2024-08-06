@@ -1,3 +1,4 @@
 supabase
 requests
 streamlit
+beautifulsoup4
