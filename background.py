@@ -60,6 +60,7 @@ def check_product_availability():
         product_url = product['url']
         user_email = product['email']
         available = zara_product_detail(product_url)
+        print(available)
         if available:
             send_email(user_email, product_url)
             print(f"Mail gönderildi: {user_email} için {product_url}")
@@ -73,5 +74,9 @@ def check_product_availability():
 if __name__ == "__main__":
     while True:
         check_product_availability()
-        print("Kontrol tamamlandı, 1 saat bekleniyor...")
-        time.sleep(30*60)  # 30 dk bekle
+        print("Kontrol tamamlandı, 30 dk bekleniyor...")
+        response = supabase.table('maintable').select('*').execute()
+        products = response.data
+        print(products)
+
+        time.sleep(10*1)  # 30 dk bekle
