@@ -79,4 +79,4 @@ if __name__ == "__main__":
         products = response.data
         print(products)
 
-        time.sleep(10*1)  # 30 dk bekle
+        time.sleep(30*60)  # 30 dk bekle
